@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Martin - Análizador de errores léxicos</title>
+  <meta name="description" content="LexiCode Studio: Entorno profesional para el análisis y diagnóstico de errores léxicos, sintácticos y semánticos en Python, JavaScript y C++.">
+
+  <!-- Tipografías de Google Fonts: Poppins para títulos, Inter para UI y JetBrains Mono para código -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Hoja de estilos del tema Light Premium Developer Studio -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body id="app">
+
+  <div class="studio-layout">
+
+    <!-- ==========================================
+         A. BARRA LATERAL IZQUIERDA (SIDEBAR)
+         ========================================== -->
+    <aside class="studio-sidebar" aria-label="Navegación principal">
+      <div class="sidebar-header">
+        <div class="brand-icon-wrapper">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 18 22 12 16 6"></polyline>
+            <polyline points="8 6 2 12 8 18"></polyline>
+          </svg>
+        </div>
+        <div class="brand-title-group">
+          <div class="brand-name">
+            MDLCH
+            <span class="brand-badge"></span>
+          </div>
+          <span class="brand-sub">Analizador Multinivel</span>
+        </div>
+      </div>
+
+      <!-- Menú vertical minimalista con iconos -->
+      <nav class="sidebar-nav">
+        <span class="nav-section-title">Menú Principal</span>
+
+        <a class="nav-item active" id="navHome" href="#app" title="Ir al inicio">
+          <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+          <span>Inicio</span>
+        </a>
+
+        <a class="nav-item" id="navEditor" href="#codeEditorSection" title="Ir al editor de código">
+          <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="4 17 10 11 4 5"></polyline>
+            <line x1="12" y1="19" x2="20" y2="19"></line>
+          </svg>
+          <span>Analizador</span>
+          <span class="nav-badge-pill">3 Niveles</span>
+        </a>
+
+        <a class="nav-item" id="navHistory" title="Ver historial de análisis de la sesión">
+          <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          <span>Historial</span>
+          <span class="nav-badge-pill" id="historyCounterBadge">0</span>
+        </a>
+
+        <a class="nav-item" id="navInfo" href="#infoSection" title="Conoce el análisis léxico y compiladores">
+          <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+          <span>Información</span>
+        </a>
+      </nav>
+
+      <!-- Pie de sidebar -->
+      <div class="sidebar-footer">
+        <div class="sidebar-info-card">
+          <span class="info-course-tag">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+              <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+            </svg>
+            Autómatas I
+          </span>
+          <p class="info-course-desc">
+            Motor de compilación: <strong>Léxico, Sintáctico y Semántico</strong> (Py, JS, C++).
+          </p>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ==========================================
+         B. ENCABEZADO SUPERIOR Y ÁREA PRINCIPAL
+         ========================================== -->
+    <div class="studio-main">
+
+      <!-- Encabezado superior -->
+      <header class="studio-topbar">
+        <div class="topbar-titles">
+          <h1 class="topbar-title">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" color="#7047EB">
+              <polyline points="4 17 10 11 4 5"></polyline>
+              <line x1="12" y1="19" x2="20" y2="19"></line>
+            </svg>
+            Analizador de código
+          </h1>
+          <p class="topbar-subtitle">Identifica y comprende los errores de tu programación</p>
+        </div>
+
+        <div class="topbar-meta">
+          <div class="course-chip">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+            </svg>
+            <span>Asignatura: <strong>Autómatas I</strong></span>
+          </div>
+
+          <div class="shortcut-chip" title="Atajo para analizar">
+            <span>Atajo:</span>
+            <kbd>Ctrl</kbd> + <kbd>Enter</kbd>
+          </div>
+        </div>
+      </header>
+
+      <!-- Contenido principal del estudio -->
+      <main class="studio-content">
+
+        <!-- ==========================================
+             C. ÁREA PRINCIPAL: EDITOR DE CÓDIGO
+             ========================================== -->
+        <section class="editor-studio-card" id="codeEditorSection" aria-label="Editor de código fuente">
+
+          <!-- Barra de controles superior del editor -->
+          <div class="editor-controls-header">
+            <div class="editor-lang-group">
+              <div class="lang-select-wrapper">
+                <select id="languageSelect" class="custom-select" aria-label="Selector de lenguaje">
+                  <option value="python" selected>Python 3</option>
+                  <option value="javascript">JavaScript (ES2024)</option>
+                  <option value="cpp">C++ (C++20)</option>
+                </select>
+                <div class="select-arrow-icon">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </div>
+              </div>
+
+              <!-- Badge con el nombre del lenguaje seleccionado -->
+              <span id="currentLangBadge" class="current-lang-pill">Python 3</span>
+            </div>
+
+            <!-- Botones de presets por nivel -->
+            <div class="editor-presets-group">
+              <span class="preset-caption">Probar:</span>
+              <button type="button" id="loadValidBtn" class="btn-preset btn-preset-valid" title="Código válido sin errores">
+                Válido
+              </button>
+              <button type="button" id="loadLexicalBtn" class="btn-preset btn-preset-lexical" title="Errores de caracteres y tokens (Rojo)">
+                Léxicos
+              </button>
+              <button type="button" id="loadSyntacticBtn" class="btn-preset btn-preset-syntactic" title="Errores de gramática y delimitadores (Naranja)">
+                Sintácticos
+              </button>
+              <button type="button" id="loadSemanticBtn" class="btn-preset btn-preset-semantic" title="Errores de ámbitos, aridad y tipos (Amarillo)">
+                Semánticos
+              </button>
+              <button type="button" id="loadAllBtn" class="btn-preset btn-preset-all" title="Errores combinados en todos los niveles">
+                Combinados
+              </button>
+            </div>
+
+            <!-- Botones principales de acción -->
+            <div class="editor-actions-group">
+              <button type="button" id="copyBtn" class="btn btn-secondary-light btn-sm" title="Copiar código al portapapeles">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                Copiar
+              </button>
+
+              <button type="button" id="clearBtn" class="btn btn-secondary-light btn-sm" title="Limpiar contenido del editor">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+                Limpiar
+              </button>
+
+              <button type="button" id="analyzeBtn" class="btn btn-primary-purple" title="Analizar código fuente (Ctrl + Enter)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+                Analizar código
+              </button>
+            </div>
+          </div>
+
+          <!-- Cuerpo editable con números de línea y textarea -->
+          <div class="editor-workspace-container" id="editorContainer">
+            <div id="lineNumbers" class="line-numbers" aria-hidden="true">
+              <div>1</div>
+            </div>
+            <textarea
+              id="codeEditor"
+              class="code-textarea"
+              placeholder="Escribe o pega aquí tu código en Python, JavaScript o C++ para analizar errores léxicos, sintácticos y semánticos..."
+              spellcheck="false"
+              autocomplete="off"
+              autocorrect="off"
+              autocapitalize="off"></textarea>
+          </div>
+
+          <!-- Barra de estado inferior del editor -->
+          <div class="editor-statusbar">
+            <div class="statusbar-info">
+              <span id="cursorPosition">Lín: 1, Col: 1</span>
+              <span>Líneas: <strong id="lineCount">1</strong></span>
+              <span>Caracteres: <strong id="charCount">0</strong></span>
+            </div>
+            <div class="statusbar-hint">
+              Presiona <kbd>Ctrl</kbd> + <kbd>Enter</kbd> para ejecutar el análisis
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             D. PANEL DE RESULTADOS (ANCHO COMPLETO DEBAJO)
+             ========================================== -->
+        <section class="results-studio-card" id="resultsCard" aria-label="Resultados del análisis">
+
+          <!-- Estado inicial de espera -->
+          <div id="resultsPlaceholder" class="results-placeholder">
+            <div class="placeholder-icon-circle">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                <line x1="11" y1="8" x2="11" y2="14"></line>
+                <line x1="8" y1="11" x2="14" y2="11"></line>
+              </svg>
+            </div>
+            <h3>Listo para analizar tu código</h3>
+            <p>Escribe tu código en el editor superior o selecciona uno de los ejemplos predefinidos y presiona <strong>"Analizar código"</strong> para examinar errores en tiempo real.</p>
+          </div>
+
+          <!-- Contenido activo tras el análisis -->
+          <div id="resultsSection" class="results-content hidden">
+
+            <!-- Tarjetas independientes de métricas -->
+            <div class="metrics-row">
+              <div class="metric-card">
+                <div class="metric-header">
+                  <span class="metric-label">Lenguaje</span>
+                  <svg class="metric-icon-small" viewBox="0 0 24 24" fill="none" stroke="#7047EB" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                </div>
+                <div id="analyzedLang" class="metric-value text-purple">-</div>
+              </div>
+
+              <div class="metric-card card-lexical">
+                <div class="metric-header">
+                  <span class="metric-label" style="color: #EF4444;">Errores Léxicos</span>
+                  <svg class="metric-icon-small" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line></svg>
+                </div>
+                <div id="countLexicalErrors" class="metric-value text-lexical">0</div>
+              </div>
+
+              <div class="metric-card card-syntactic">
+                <div class="metric-header">
+                  <span class="metric-label" style="color: #F97316;">Errores Sintácticos</span>
+                  <svg class="metric-icon-small" viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path></svg>
+                </div>
+                <div id="countSyntacticErrors" class="metric-value text-syntactic">0</div>
+              </div>
+
+              <div class="metric-card card-semantic">
+                <div class="metric-header">
+                  <span class="metric-label" style="color: #B45309;">Errores Semánticos</span>
+                  <svg class="metric-icon-small" viewBox="0 0 24 24" fill="none" stroke="#EAB308" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                </div>
+                <div id="countSemanticErrors" class="metric-value text-semantic">0</div>
+              </div>
+
+              <div class="metric-card card-total">
+                <div class="metric-header">
+                  <span class="metric-label">Total Errores</span>
+                  <svg class="metric-icon-small" viewBox="0 0 24 24" fill="none" stroke="#7047EB" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                </div>
+                <div id="totalErrors" class="metric-value text-purple">0</div>
+              </div>
+            </div>
+
+            <!-- Pestañas de resultados (Resumen, Reporte de errores, Tabla de tokens, Categorías) -->
+            <div class="results-tabs-wrapper" role="tablist">
+              <button type="button" id="tabSummaryBtn" class="tab-btn active" role="tab">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="7" height="7"></rect>
+                  <rect x="14" y="3" width="7" height="7"></rect>
+                  <rect x="14" y="14" width="7" height="7"></rect>
+                  <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+                Resumen
+              </button>
+
+              <button type="button" id="tabErrorsBtn" class="tab-btn" role="tab">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="8" x2="12" y2="12"></line>
+                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                Reporte de errores
+                <span id="errorCountBadge" class="tab-badge badge-error">0</span>
+              </button>
+
+              <button type="button" id="tabTokensBtn" class="tab-btn" role="tab">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="4 7 4 4 20 4 20 7"></polyline>
+                  <line x1="9" y1="20" x2="15" y2="20"></line>
+                  <line x1="12" y1="4" x2="12" y2="20"></line>
+                </svg>
+                Tabla de tokens
+                <span id="tokenCountBadge" class="tab-badge badge-neutral">0</span>
+              </button>
+
+              <button type="button" id="tabStatsBtn" class="tab-btn" role="tab">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="20" x2="18" y2="10"></line>
+                  <line x1="12" y1="20" x2="12" y2="4"></line>
+                  <line x1="6" y1="20" x2="6" y2="14"></line>
+                </svg>
+                Categorías
+              </button>
+            </div>
+
+            <!-- PANE 1: RESUMEN -->
+            <div id="tabSummaryPane" class="tab-pane" role="tabpanel">
+              <!-- Banner de estado general -->
+              <div id="statusBanner" class="status-banner status-banner-success">
+                <div id="statusIcon" class="status-icon">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  </svg>
+                </div>
+                <div class="status-text">
+                  <h4 id="statusTitle">Estado del análisis</h4>
+                  <p id="statusDesc">Descripción del resultado del análisis.</p>
+                </div>
+              </div>
+
+              <!-- Tarjeta de tiempo de ejecución y motor -->
+              <div class="sidebar-info-card" style="background: #FFFFFF; border: 1px solid var(--border-color); padding: 1.25rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                  <div>
+                    <strong style="color: var(--text-main); font-size: 0.95rem;">Rendimiento del motor:</strong>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.2rem;">
+                      Análisis léxico, validación sintáctica y verificación semántica completadas con éxito.
+                    </p>
+                  </div>
+                  <div style="font-family: var(--font-code); font-size: 0.9rem; background: var(--bg-surface); padding: 0.4rem 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                    Tiempo: <strong id="executionTime" style="color: var(--primary-purple);">0 ms</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- PANE 2: REPORTE DE ERRORES -->
+            <div id="tabErrorsPane" class="tab-pane hidden" role="tabpanel">
+              <div class="errors-toolbar">
+                <div class="errors-filter-pills">
+                  <button type="button" id="filterPillAll" class="filter-pill active" data-filter="all">
+                    Todos <span id="pillCountAll" class="pill-count">0</span>
+                  </button>
+                  <button type="button" id="filterPillLexical" class="filter-pill pill-lexical" data-filter="lexical">
+                    Léxicos <span id="pillCountLexical" class="pill-count">0</span>
+                  </button>
+                  <button type="button" id="filterPillSyntactic" class="filter-pill pill-syntactic" data-filter="syntactic">
+                    Sintácticos <span id="pillCountSyntactic" class="pill-count">0</span>
+                  </button>
+                  <button type="button" id="filterPillSemantic" class="filter-pill pill-semantic" data-filter="semantic">
+                    Semánticos <span id="pillCountSemantic" class="pill-count">0</span>
+                  </button>
+                </div>
+              </div>
+
+              <div id="errorsContainer">
+                <!-- Lista dinámica de tarjetas de error por nivel -->
+              </div>
+            </div>
+
+            <!-- PANE 3: TABLA DE TOKENS -->
+            <div id="tabTokensPane" class="tab-pane hidden" role="tabpanel">
+              <div class="tokens-toolbar">
+                <div class="tokens-filter-group">
+                  <div class="search-input-wrapper">
+                    <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="11" cy="11" r="8"></circle>
+                      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" id="tokenSearchInput" class="search-input" placeholder="Buscar por lexema o tipo...">
+                  </div>
+
+                  <select id="categoryFilter" class="filter-select">
+                    <option value="all">Todas las categorías</option>
+                    <option value="keyword">Palabras reservadas</option>
+                    <option value="identifier">Identificadores</option>
+                    <option value="operator">Operadores</option>
+                    <option value="literal">Literales</option>
+                    <option value="delimiter">Delimitadores</option>
+                    <option value="comment">Comentarios</option>
+                    <option value="preprocessor">Preprocesador</option>
+                  </select>
+                </div>
+
+                <div class="tokens-export-group">
+                  <button type="button" id="exportCsvBtn" class="btn btn-secondary-light btn-sm" title="Descargar lista de tokens en formato CSV">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                      <polyline points="7 10 12 15 17 10"></polyline>
+                      <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    CSV
+                  </button>
+
+                  <button type="button" id="exportJsonBtn" class="btn btn-secondary-light btn-sm" title="Descargar reporte completo en JSON">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                      <polyline points="7 10 12 15 17 10"></polyline>
+                      <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    JSON
+                  </button>
+                </div>
+              </div>
+
+              <div class="tokens-table-wrapper">
+                <table class="tokens-table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Elemento (Lexema)</th>
+                      <th>Tipo de Token</th>
+                      <th>Línea</th>
+                      <th>Columna</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tokensTableBody">
+                    <!-- Filas dinámicas de tokens -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- PANE 4: CATEGORÍAS -->
+            <div id="tabStatsPane" class="tab-pane hidden" role="tabpanel">
+              <div class="stats-breakdown-card">
+                <div class="stat-category-item">
+                  <span class="stat-cat-label">Palabras reservadas</span>
+                  <span id="countKeywords" class="stat-cat-count">0</span>
+                </div>
+                <div class="stat-category-item">
+                  <span class="stat-cat-label">Identificadores</span>
+                  <span id="countIdentifiers" class="stat-cat-count">0</span>
+                </div>
+                <div class="stat-category-item">
+                  <span class="stat-cat-label">Operadores</span>
+                  <span id="countOperators" class="stat-cat-count">0</span>
+                </div>
+                <div class="stat-category-item">
+                  <span class="stat-cat-label">Literales numéricos y cadenas</span>
+                  <span id="countLiterals" class="stat-cat-count">0</span>
+                </div>
+                <div class="stat-category-item">
+                  <span class="stat-cat-label">Delimitadores y puntuación</span>
+                  <span id="countDelimiters" class="stat-cat-count">0</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ==========================================
+             4. APARTADO INFORMATIVO: "CONOCE EL ANÁLISIS LÉXICO"
+             ========================================== -->
+        <section class="info-studio-section" id="infoSection" aria-label="Información conceptual">
+          <div class="info-section-title-group">
+            <h2 class="info-section-title">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7047EB" stroke-width="2.5">
+                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+              </svg>
+              Conoce el análisis léxico y de compiladores
+            </h2>
+            <p class="info-section-subtitle">
+              Conceptos clave para dominar la teoría de compiladores y autómatas finitos en Autómatas I.
+            </p>
+          </div>
+
+          <!-- Cuatro tarjetas pequeñas educativas -->
+          <div class="edu-cards-grid">
+            <!-- Tarjeta 1: ¿Qué es un token? -->
+            <div class="edu-card edu-card-purple">
+              <div class="edu-card-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                  <polyline points="2 17 12 22 22 17"></polyline>
+                  <polyline points="2 12 12 17 22 12"></polyline>
+                </svg>
+              </div>
+              <h3 class="edu-card-title">¿Qué es un token?</h3>
+              <p class="edu-card-desc">
+                Es la unidad léxica atómica con significado en la gramática. Se representa formalmente como la tupla <code>&lt;Nombre, Atributo&gt;</code> a partir del patrón regular que coincide con el lexema.
+              </p>
+            </div>
+
+            <!-- Tarjeta 2: ¿Qué es un error léxico? -->
+            <div class="edu-card edu-card-red">
+              <div class="edu-card-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="8" x2="12" y2="12"></line>
+                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+              </div>
+              <h3 class="edu-card-title">¿Qué es un error léxico?</h3>
+              <p class="edu-card-desc">
+                Ocurre cuando un flujo de caracteres no es aceptado por ningún estado final del Autómata Finito (DFA). Incluye símbolos ilegales, identificadores con dígitos o números mal formados.
+              </p>
+            </div>
+
+            <!-- Tarjeta 3: ¿Qué es un error sintáctico? -->
+            <div class="edu-card edu-card-orange">
+              <div class="edu-card-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                </svg>
+              </div>
+              <h3 class="edu-card-title">¿Qué es un error sintáctico?</h3>
+              <p class="edu-card-desc">
+                Surge cuando los tokens individuales son correctos, pero su orden o estructura infringe la Gramática Libre de Contexto (GLC). Ej: paréntesis sin cerrar, falta de <code>:</code> o falta de <code>;</code>.
+              </p>
+            </div>
+
+            <!-- Tarjeta 4: ¿Qué es un error semántico? -->
+            <div class="edu-card edu-card-yellow">
+              <div class="edu-card-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+              </div>
+              <h3 class="edu-card-title">¿Qué es un error semántico?</h3>
+              <p class="edu-card-desc">
+                Ocurre cuando la frase es gramaticalmente correcta pero carece de significado lógico válido: variables no declaradas, reasignación a constantes, incompatibilidad de tipos o aridad errónea.
+              </p>
+            </div>
+          </div>
+
+          <!-- Cuadro comparativo tridimensional -->
+          <div class="comparison-table-wrapper">
+            <table class="comparison-table">
+              <thead>
+                <tr>
+                  <th>Criterio</th>
+                  <th style="color: #EF4444;">Error Léxico</th>
+                  <th style="color: #F97316;">Error Sintáctico</th>
+                  <th style="color: #B45309;">Error Semántico</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Fase del compilador</strong></td>
+                  <td>Fase 1: Escaneo (Scanner)</td>
+                  <td>Fase 2: Análisis Sintáctico (Parser)</td>
+                  <td>Fase 3: Verificación Semántica</td>
+                </tr>
+                <tr>
+                  <td><strong>Modelo formal</strong></td>
+                  <td>Autómatas Finitos (DFA/NFA) y Regex</td>
+                  <td>Autómatas de Pila (PDA) y GLC</td>
+                  <td>Tabla de Símbolos y Sistema de Tipos</td>
+                </tr>
+                <tr>
+                  <td><strong>Pregunta clave</strong></td>
+                  <td>¿La palabra existe en el alfabeto?</td>
+                  <td>¿La oración está bien estructurada?</td>
+                  <td>¿La oración tiene sentido y tipo correcto?</td>
+                </tr>
+                <tr>
+                  <td><strong>Ejemplo Python</strong></td>
+                  <td><code>123total = 5 $</code></td>
+                  <td><code>def f(x, y)</code> (sin ':')</td>
+                  <td><code>x = total_no_definido * 2</code></td>
+                </tr>
+                <tr>
+                  <td><strong>Ejemplo JavaScript</strong></td>
+                  <td><code>let §id = 0xZZ;</code></td>
+                  <td><code>const X;</code> (sin valor)</td>
+                  <td><code>const PI = 3.14; PI = 3.1416;</code></td>
+                </tr>
+                <tr>
+                  <td><strong>Ejemplo C++</strong></td>
+                  <td><code>char c = 'ABC';</code></td>
+                  <td><code>class Foo { }</code> (sin ';')</td>
+                  <td><code>int x = "texto";</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Drawer / Modal de Historial -->
+  <div class="drawer-backdrop" id="historyBackdrop"></div>
+  <aside class="history-drawer" id="historyDrawer" aria-label="Historial de análisis">
+    <div class="history-drawer-header">
+      <div class="history-drawer-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7047EB" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        Historial de análisis
+      </div>
+      <button type="button" class="btn-close-drawer" id="btnCloseHistory" title="Cerrar historial">✕</button>
+    </div>
+    <div class="history-list" id="historyList">
+      <p style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 2rem 1rem;">
+        No hay análisis previos registrados en esta sesión.
+      </p>
+    </div>
+  </aside>
+
+  <!-- Contenedor de notificaciones flotantes (Toast) -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Scripts modulares del analizador multinivel -->
+  <script src="js/lexer-base.js"></script>
+  <script src="js/lexers/python-lexer.js"></script>
+  <script src="js/lexers/javascript-lexer.js"></script>
+  <script src="js/lexers/cpp-lexer.js"></script>
+  <script src="js/analyzers/python-analyzer.js"></script>
+  <script src="js/analyzers/javascript-analyzer.js"></script>
+  <script src="js/analyzers/cpp-analyzer.js"></script>
+  <script src="js/sample-codes.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

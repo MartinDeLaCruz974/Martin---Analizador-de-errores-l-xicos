@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Pruebas Unitarias Multinivel - Analizador de Errores (Autómatas I)</title>
+  <style>
+    body { font-family: monospace; padding: 2rem; background: #0c1222; color: #f8fafc; }
+    .pass { color: #10b981; }
+    .fail { color: #ef4444; }
+    .summary { margin-top: 1.5rem; padding: 1rem; border: 1px solid #1e2c4d; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <h1>Ejecutando pruebas unitarias multinivel (Léxico, Sintáctico, Semántico)...</h1>
+  <div id="results"></div>
+
+  <!-- Scripts del analizador -->
+  <script src="../js/lexer-base.js"></script>
+  <script src="../js/lexers/python-lexer.js"></script>
+  <script src="../js/lexers/javascript-lexer.js"></script>
+  <script src="../js/lexers/cpp-lexer.js"></script>
+  <script src="../js/analyzers/python-analyzer.js"></script>
+  <script src="../js/analyzers/javascript-analyzer.js"></script>
+  <script src="../js/analyzers/cpp-analyzer.js"></script>
+  <script src="../js/sample-codes.js"></script>
+
+  <script>
+    let passed = 0;
+    let failed = 0;
+    const logContainer = document.getElementById('results');
+
+    function assert(condition, testName, details = '') {
+      const p = document.createElement('p');
+      if (condition) {
+        passed++;
+        p.className = 'pass';
+        p.textContent = `[PASS] ${testName}`;
+        console.log(`[PASS] ${testName}`);
+      } else {
+        failed++;
+        p.className = 'fail';
+        p.textContent = `[FAIL] ${testName} - ${details}`;
+        console.error(`[FAIL] ${testName} - ${details}`);
+      }
+      logContainer.appendChild(p);
+    }
+
+    // ==========================================
+    // 1. PRUEBAS MULTINIVEL EN PYTHON
+    // ==========================================
+    console.log("--- INICIANDO PRUEBAS DE PYTHON ---");
+    {
+      // Código válido
+      const pyValid = new PythonAnalyzer("def suma(a, b):\n    return a + b\nx = suma(10, 20)\nprint(x)");
+      const resV = pyValid.analyze();
+      assert(resV.isValid, "Python: Código válido sin errores (0 total)");
+      assert(resV.counts.total === 0, "Python: Conteo de errores totales es 0");
+
+      // Error Léxico
+      const pyLex = new PythonAnalyzer("123var = 50 $");
+      const resLex = pyLex.analyze();
+      assert(resLex.counts.lexical >= 2, "Python: Detecta errores léxicos (identificador y $)");
+
+      // Error Sintáctico: falta ':' y paréntesis sin cerrar
+      const pySyn = new PythonAnalyzer("def proceso(x, y)\n    total = (x + y");
+      const resSyn = pySyn.analyze();
+      assert(resSyn.counts.syntactic >= 2, "Python: Detecta falta de ':' y paréntesis sin cerrar");
+
+      // Error Sintáctico: L-Value inválido
+      const pySyn2 = new PythonAnalyzer("50 = valor");
+      const resSyn2 = pySyn2.analyze();
+      assert(resSyn2.counts.syntactic >= 1, "Python: Detecta asignación a literal '50 = valor'");
+
+      // Error Semántico: variable no definida y llamada inexistente
+      const pySem = new PythonAnalyzer("x = variable_inexistente * 2\notra_inexistente()");
+      const resSem = pySem.analyze();
+      assert(resSem.counts.semantic >= 2, "Python: Detecta variable no definida y función inexistente");
+
+      // Error Semántico: aridad incorrecta
+      const pyArity = new PythonAnalyzer("def duplicar(x):\n    return x * 2\nduplicar(1, 2, 3)");
+      const resArity = pyArity.analyze();
+      assert(resArity.counts.semantic >= 1, "Python: Detecta aridad incorrecta (espera 1, recibe 3)");
+
+      // Error Semántico: int + str
+      const pyType = new PythonAnalyzer("res = 10 + \"cinco\"");
+      const resType = pyType.analyze();
+      assert(resType.counts.semantic >= 1, "Python: Detecta incompatibilidad de tipos (int + str)");
+    }
+
+    // ==========================================
+    // 2. PRUEBAS MULTINIVEL EN JAVASCRIPT
+    // ==========================================
+    console.log("--- INICIANDO PRUEBAS DE JAVASCRIPT ---");
+    {
+      // Código válido
+      const jsValid = new JavaScriptAnalyzer("function suma(a, b) { return a + b; }\nconst res = suma(5, 10); console.log(res);");
+      const resV = jsValid.analyze();
+      assert(resV.isValid, "JavaScript: Código válido sin errores (0 total)");
+
+      // Error Léxico
+      const jsLex = new JavaScriptAnalyzer("let 99id = §ADMIN;");
+      const resLex = jsLex.analyze();
+      assert(resLex.counts.lexical >= 2, "JavaScript: Detecta identificador 99id y símbolo §");
+
+      // Error Sintáctico: const sin inicializar y falta paréntesis
+      const jsSyn = new JavaScriptAnalyzer("const VALOR;\nif () {\n  let x = 1;\n}");
+      const resSyn = jsSyn.analyze();
+      assert(resSyn.counts.syntactic >= 2, "JavaScript: Detecta const sin inicializar y condición vacía en if");
+
+      // Error Semántico: reasignación a const
+      const jsConst = new JavaScriptAnalyzer("const PI = 3.14;\nPI = 3.1416;");
+      const resConst = jsConst.analyze();
+      assert(resConst.counts.semantic >= 1, "JavaScript: Detecta reasignación a variable constante");
+
+      // Error Semántico: redeclaración con let
+      const jsRedecl = new JavaScriptAnalyzer("let total = 10;\nlet total = 20;");
+      const resRedecl = jsRedecl.analyze();
+      assert(resRedecl.counts.semantic >= 1, "JavaScript: Detecta redeclaración de let en mismo ámbito");
+
+      // Error Semántico: variable no declarada
+      const jsUndecl = new JavaScriptAnalyzer("let z = variableNoDeclarada + 10;");
+      const resUndecl = jsUndecl.analyze();
+      assert(resUndecl.counts.semantic >= 1, "JavaScript: Detecta variable no declarada");
+    }
+
+    // ==========================================
+    // 3. PRUEBAS MULTINIVEL EN C++
+    // ==========================================
+    console.log("--- INICIANDO PRUEBAS DE C++ ---");
+    {
+      // Código válido
+      const cppValid = new CppAnalyzer("#include <iostream>\nint main() {\n  int x = 10;\n  std::cout << x << std::endl;\n  return 0;\n}");
+      const resV = cppValid.analyze();
+      assert(resV.isValid, "C++: Código válido sin errores (0 total)");
+
+      // Error Léxico
+      const cppLex = new CppAnalyzer("int $precio = 50;\nchar c = 'ABC';");
+      const resLex = cppLex.analyze();
+      assert(resLex.counts.lexical >= 2, "C++: Detecta $ ilegal y literal char con múltiples caracteres");
+
+      // Error Sintáctico: falta ';' tras class
+      const cppSyn = new CppAnalyzer("class Sensor {\n  double valor;\n}\nint main() { return 0; }");
+      const resSyn = cppSyn.analyze();
+      assert(resSyn.counts.syntactic >= 1, "C++: Detecta falta de ';' tras definición de class");
+
+      // Error Sintáctico: sentencia sin ';'
+      const cppSyn2 = new CppAnalyzer("int main() {\n  int a = 10\n  int b = 20;\n  return 0;\n}");
+      const resSyn2 = cppSyn2.analyze();
+      assert(resSyn2.counts.syntactic >= 1, "C++: Detecta falta de ';' al final de instrucción");
+
+      // Error Semántico: redefinición de variable
+      const cppRedef = new CppAnalyzer("int main() {\n  int x = 10;\n  int x = 20;\n  return 0;\n}");
+      const resRedef = cppRedef.analyze();
+      assert(resRedef.counts.semantic >= 1, "C++: Detecta redefinición de variable en mismo ámbito");
+
+      // Error Semántico: modificación de const
+      const cppConst = new CppAnalyzer("int main() {\n  const int MAX = 100;\n  MAX = 200;\n  return 0;\n}");
+      const resConst = cppConst.analyze();
+      assert(resConst.counts.semantic >= 1, "C++: Detecta modificación de variable const");
+
+      // Error Semántico: asignación de tipo incompatible (int = "texto")
+      const cppType = new CppAnalyzer("int main() {\n  int x = \"texto\";\n  return 0;\n}");
+      const resType = cppType.analyze();
+      assert(resType.counts.semantic >= 1, "C++: Detecta asignación incompatible de string a int");
+    }
+
+    // ==========================================
+    // 4. PRUEBA DE TODOS LOS PRESETS DE SAMPLE_CODES
+    // ==========================================
+    console.log("--- INICIANDO PRUEBAS DE SAMPLE_CODES ---");
+    {
+      ['python', 'javascript', 'cpp'].forEach(lang => {
+        let AnalyzerClass = lang === 'python' ? PythonAnalyzer : (lang === 'javascript' ? JavaScriptAnalyzer : CppAnalyzer);
+        
+        // Válido debe tener 0 errores
+        const validRes = new AnalyzerClass(SAMPLE_CODES[lang].valid).analyze();
+        assert(validRes.counts.total === 0, `${lang}: Preset Válido tiene 0 errores en todos los niveles`);
+
+        // Preset léxico debe tener errores léxicos
+        const lexRes = new AnalyzerClass(SAMPLE_CODES[lang].lexicalErrors).analyze();
+        assert(lexRes.counts.lexical > 0, `${lang}: Preset Léxico detecta errores léxicos (${lexRes.counts.lexical})`);
+
+        // Preset sintáctico debe tener errores sintácticos
+        const synRes = new AnalyzerClass(SAMPLE_CODES[lang].syntacticErrors).analyze();
+        assert(synRes.counts.syntactic > 0, `${lang}: Preset Sintáctico detecta errores sintácticos (${synRes.counts.syntactic})`);
+
+        // Preset semántico debe tener errores semánticos
+        const semRes = new AnalyzerClass(SAMPLE_CODES[lang].semanticErrors).analyze();
+        assert(semRes.counts.semantic > 0, `${lang}: Preset Semántico detecta errores semánticos (${semRes.counts.semantic})`);
+
+        // Preset allErrors debe detectar errores en múltiples niveles
+        const allRes = new AnalyzerClass(SAMPLE_CODES[lang].allErrors).analyze();
+        assert(allRes.counts.total >= 3, `${lang}: Preset Combinado detecta múltiples errores en distintos niveles (${allRes.counts.total})`);
+      });
+    }
+
+    // Resumen
+    const summary = document.createElement('div');
+    summary.className = 'summary';
+    summary.innerHTML = `
+      <h2>Resumen de Pruebas:</h2>
+      <p>Aprobadas: <strong style="color: #10b981;">${passed}</strong></p>
+      <p>Fallidas: <strong style="color: #ef4444;">${failed}</strong></p>
+      <p>Total: <strong>${passed + failed}</strong></p>
+      <div id="test-status">${failed === 0 ? 'ALL_PASSED' : 'SOME_FAILED'}</div>
+    `;
+    document.body.appendChild(summary);
+  </script>
+</body>
+</html>
